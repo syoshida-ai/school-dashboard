@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デジライズAIスクール コースマップ</title>
+<style>
+  :root{
+    --bg:#faf6f1; --card:#ffffff; --ink:#1f2937; --muted:#9ca3af; --line:#eee7df;
+    --green:#34a853; --amber:#f4b400; --grey:#cfcabf;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:var(--bg);color:var(--ink);padding:36px 40px 80px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:.5px}
+  .sub{color:var(--muted);margin-top:8px;font-size:15px}
+  .grid{display:grid;gap:22px;margin-top:28px}
+  .kpis{grid-template-columns:repeat(5,1fr)}
+  .card{background:var(--card);border-radius:18px;padding:22px 24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .kpi .label{color:var(--muted);font-size:14px}
+  .kpi .num{font-size:40px;font-weight:800;margin:6px 0 2px}
+  .kpi .foot{color:var(--muted);font-size:13px}
+  .charts{grid-template-columns:1fr 1fr}
+  .card h2{font-size:18px;font-weight:700;margin-bottom:18px}
+  .donutWrap{display:flex;align-items:center;gap:24px}
+  .legend{font-size:13.5px;line-height:2}
+  .legend span.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .legend .cnt{color:var(--muted);margin-left:6px}
+  .filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:22px;padding:9px 18px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.15s}
+  .chip .dot{width:9px;height:9px;border-radius:50%}
+  .chip.active{background:#1f2937;color:#fff;border-color:#1f2937}
+  .courses{grid-template-columns:repeat(3,1fr)}
+  .course{background:var(--card);border-radius:16px;padding:20px 22px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .course .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .course .ttl{font-size:16px;font-weight:700;line-height:1.45}
+  .badge{font-size:12px;padding:3px 11px;border-radius:20px;white-space:nowrap}
+  .b-初級{background:#e7f6ec;color:#2e7d4f}
+  .b-中級{background:#e7f0fb;color:#3b6fd1}
+  .b-上級{background:#fdece2;color:#d2723b}
+  .b-その他{background:#f0f0ee;color:#6b7280}
+  .meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13.5px;margin:14px 0 12px}
+  .meta .cdot{width:9px;height:9px;border-radius:50%}
+  .meta .status{font-weight:700}
+  .s-done{color:var(--green)} .s-prog{color:var(--amber)} .s-none{color:var(--muted)}
+  .bar{height:7px;background:#eee7df;border-radius:6px;overflow:hidden;flex:1}
+  .bar > i{display:block;height:100%;border-radius:6px}
+  .pwrap{display:flex;align-items:center;gap:12px}
+  .pct{font-weight:700;font-size:14px;min-width:42px;text-align:right}
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.charts,.courses{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <h1>デジライズAIスクール コースマップ</h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="grid charts">
+    <div class="card">
+      <h2>カテゴリ別コース数</h2>
+      <div class="donutWrap">
+        <div id="donut"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>レベル別の進捗状況</h2>
+      <div id="bars"></div>
+    </div>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div class="grid courses" id="courses" style="margin-top:18px"></div>
+
+<script>
+const RAW = {
+ fields:["category","title","lessons","progress","durationMin"],
+ courses: [
+  ["イベントアーカイブ","コラボイベント",1,0,null],
+  ["Claude Code","7.Claude Code導入と初動 ~ Claude~",4,0,null],
+  ["Claude","1.Claudeの全体像を掴む ~ Claude~",5,0,null],
+  ["Claude Code","8.コマンドと日常操作 ~ Claude~",4,0,null],
+  ["Claude","2.Claude固有機能を使いこなす ~ Claude~",8,0,null],
+  ["Claude Code","9.コンテキストと文脈設計 ~ Claude~",7,0,null],
+  ["Claude","3.Claude実務デモ集 ~ Claude~",3,0,null],
+  ["Claude Code","10.Skills・Hooks・拡張機能 ~ Claude~",3,0,null],
+  ["Claude","4.Claude Coworkの基本 ~ Claude~",5,0,null],
+  ["Claude Code","11.マルチエージェントと自動化 ~ Claude~",2,0,null],
+  ["Claude","5.Coworkの拡張機能 ~ Claude~",1,0,null],
+  ["Claude Code","12.Claude Code業務デモ集 ~ Claude~",3,0,null],
+  ["Claude","6.Cowork実務デモ集 ~ Claude~",3,0,null],
+  ["Claude Code","【コースを進める前の事前学習】",1,0,null],
+  ["Claude Code","座学パート",4,0,null],
+  ["Claude Code","ワークパート",4,0,null],
+  ["Claude Code","セキュリティ・Q&A",1,0,null],
+  ["生成AI総合","基礎教養編",5,0,119],
+  ["生成AI総合","ツール実践編",2,0,56],
+  ["生成AI総合","応用・戦略編",2,0,51],
+  ["Weekly AI勉強会","Weekly AI勉強会",1,0,null],
+  ["限定ウェビナー","限定ウェビナー",2,0,null],
+  ["AI時代を生き抜くキャリアップ術","AI時代を生き抜くキャリアアップ術",3,0,null],
+  ["ChatGPT","ChatGPT基礎（初級）",5,0,41],
+  ["ChatGPT","ChatGPTプロンプト活用（初級）",1,0,39],
+  ["ChatGPT","ChatGPT文書作成入門（初級）",1,0,59],
+  ["ChatGPT","ChatGPTビジュアル制作（中級）",4,0,67],
+  ["ChatGPT","ChatGPTデータ活用（中級）",1,0,29],
+  ["ChatGPT","ChatGPTリサーチ実践（中級）",2,0,39],
+  ["ChatGPT","ChatGPT業務自動化（上級）",1,0,10],
+  ["ChatGPT","ChatGPTプロジェクト管理（上級）",1,0,18],
+  ["ChatGPT","チャットボットGPTs活用（上級）",1,0,34],
+  ["ChatGPT","ChatGPTパーソナライズ（上級）",1,0,20],
+  ["ChatGPT","ChatGPT組織展開（上級）",1,0,12],
+  ["ChatGPT","ChatGPT実践活用（上級）",2,0,30],
+  ["Gemini","Gemini基礎（初級）",4,0,39],
+  ["Gemini","Geminiプロンプト活用（初級）",1,0,35],
+  ["Gemini","Gemini文書作成入門（初級）",1,0,47],
+  ["Gemini","Geminiビジュアル制作（中級）",3,0,65],
+  ["Gemini","Geminiデータ活用（中級）",1,0,26],
+  ["Gemini","Geminiリサーチ実践（中級）",2,0,40],
+  ["Gemini","Gemini Workspace連携（中級）",6,0,88],
+  ["Gemini","チャットボットGems活用（上級）",1,0,24],
+  ["Gemini","Gemini業務自動化（上級）",2,0,38],
+  ["Gemini","NotebookLM活用（上級）",1,0,45],
+  ["Gemini","Google AI Studio活用（上級）",3,0,39],
+  ["Gemini","Gemini実践活用（上級）",1,0,10],
+  ["Copilot","Copilot基礎（初級）",3,0,43],
+  ["Copilot","Copilotプロンプト活用（初級）",1,0,40],
+  ["Copilot","Copilot文書作成入門（初級）",1,0,58],
+  ["Copilot","Copilotビジュアル制作（中級）",1,0,33],
+  ["Copilot","Copilotデータ活用（中級）",1,0,22],
+  ["Copilot","Copilotリサーチ実践（中級）",1,0,23],
+  ["Copilot","Copilot M365連携（中級）",7,0,150],
+  ["Copilot","Copilotノートブック活用（上級）",1,0,22],
+  ["Copilot","Copilotエージェント活用（上級）",1,0,10],
+  ["Copilot","Copilot Studio活用（上級）",1,0,28],
+  ["Weekly AI勉強会","Claude Code勉強会",2,0,null],
+  ["デジライズAIスクールの使い方","デジライズAIスクールの使い方",1,0,null],
+  ["Codex","Codex基礎編",1,0,null],
+  ["Claude Code","最新活用アーカイブ",1,20,null]
+ ]
+};
+
+const CAT_ORDER = ["デジライズAIスクールの使い方","生成AI総合","ChatGPT","Gemini","Copilot","Claude","Claude Code","Codex","その他"];
+const CAT_COLOR = {
+  "デジライズAIスクールの使い方":"#8a7f6f","生成AI総合":"#5bb98c","ChatGPT":"#2e9e7e","Gemini":"#4285f4",
+  "Copilot":"#7b6ef0","Claude":"#cc5b46","Claude Code":"#e8853f","Codex":"#4aa3df","その他":"#9aa0a6"
+};
+const OTHER = new Set(["イベントアーカイブ","Weekly AI勉強会","限定ウェビナー","AI時代を生き抜くキャリアップ術"]);
+
+const courses = RAW.courses.map(r=>{
+  const [category,title,lessons,progress,durationMin]=r;
+  const cat = OTHER.has(category)?"その他":category;
+  let level="その他";
+  if(/初級/.test(title))level="初級"; else if(/中級/.test(title))level="中級"; else if(/上級/.test(title))level="上級";
+  const status = progress>=100?"done":progress>0?"prog":"none";
+  return {category:cat, raw:category, title, lessons, progress, durationMin, level, status};
+});
+
+// ---- KPIs ----
+const total=courses.length;
+const done=courses.filter(c=>c.status==="done").length;
+const prog=courses.filter(c=>c.status==="prog").length;
+const avg=Math.round(courses.reduce((s,c)=>s+c.progress,0)/total);
+const totMin=courses.reduce((s,c)=>s+(c.durationMin||0),0);
+const totLessons=courses.reduce((s,c)=>s+c.lessons,0);
+const ncat=new Set(courses.map(c=>c.category)).size;
+function hm(m){const h=Math.floor(m/60),mm=m%60;return h?`${h}時間${mm}分`:`${mm}分`;}
+
+document.getElementById("sub").textContent=`全${total}コース・カテゴリ別の学習進捗ダッシュボード（${"2026-06-16"}時点 / 出典: digirise.school）`;
+
+const kpiData=[
+ {label:"全コース",num:total,foot:ncat+"カテゴリ・"+totLessons+"レッスン"},
+ {label:"完了",num:done,foot:Math.round(done/total*100)+"% of total"},
+ {label:"進行中",num:prog,foot:"一部完了"},
+ {label:"平均進捗",num:avg+"%",foot:"全コース平均"},
+ {label:"確認できた動画時間",num:hm(totMin),foot:"時間表示のあるコース計"}
+];
+document.getElementById("kpis").innerHTML=kpiData.map(k=>
+ `<div class="card kpi"><div class="label">${k.label}</div><div class="num">${k.num}</div><div class="foot">${k.foot}</div></div>`).join("");
+
+// ---- Donut: category counts ----
+const catCounts={};CAT_ORDER.forEach(c=>catCounts[c]=0);
+courses.forEach(c=>catCounts[c.category]++);
+const present=CAT_ORDER.filter(c=>catCounts[c]>0);
+(function(){
+  const size=210,r=80,cx=size/2,cy=size/2,sw=34;
+  let ang=-Math.PI/2;const segs=[];
+  present.forEach(cat=>{
+    const frac=catCounts[cat]/total;const a2=ang+frac*Math.PI*2;
+    const x1=cx+r*Math.cos(ang),y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const large=frac>0.5?1:0;
+    segs.push(`<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${CAT_COLOR[cat]}" stroke-width="${sw}"/>`);
+    ang=a2;
+  });
+  document.getElementById("donut").innerHTML=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${segs.join("")}
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="30" font-weight="800" fill="#1f2937">${total}</text>
+    <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="#9ca3af">コース</text></svg>`;
+  document.getElementById("legend").innerHTML=present.map(c=>
+    `<div><span class="dot" style="background:${CAT_COLOR[c]}"></span>${c}<span class="cnt">${catCounts[c]}</span></div>`).join("");
+})();
+
+// ---- Stacked bars by level ----
+(function(){
+  const levels=["初級","中級","上級","その他"];
+  const agg=levels.map(l=>{const cs=courses.filter(c=>c.level===l);
+    return {l, done:cs.filter(c=>c.status==="done").length, prog:cs.filter(c=>c.status==="prog").length,
+      none:cs.filter(c=>c.status==="none").length, tot:cs.length};});
+  const maxV=Math.max(...agg.map(a=>a.tot),1);
+  const W=440,H=240,padL=30,padB=34,padT=10,gw=(W-padL)/levels.length,bw=46;
+  const scale=v=>(H-padB-padT)*v/maxV;
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H}">`;
+  for(let i=0;i<=4;i++){const v=Math.round(maxV*i/4);const y=H-padB-scale(v);
+    svg+=`<line x1="${padL}" y1="${y}" x2="${W}" y2="${y}" stroke="#eee7df"/><text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="11" fill="#9ca3af">${v}</text>`;}
+  agg.forEach((a,i)=>{
+    const x=padL+gw*i+gw/2-bw/2;let y=H-padB;
+    [["none",a.none,"#cfcabf"],["prog",a.prog,"#f4b400"],["done",a.done,"#34a853"]].forEach(([k,v,col])=>{
+      if(v>0){const h=scale(v);y-=h;svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${col}" rx="3"/>`;}
+    });
+    svg+=`<text x="${x+bw/2}" y="${H-padB+18}" text-anchor="middle" font-size="12.5" fill="#6b7280">${a.l}</text>`;
+  });
+  svg+=`</svg>`;
+  const leg=`<div style="display:flex;gap:18px;font-size:13px;margin-top:6px;color:#6b7280">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#34a853;margin-right:6px"></span>完了</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f4b400;margin-right:6px"></span>進行中</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#cfcabf;margin-right:6px"></span>未開始</span></div>`;
+  document.getElementById("bars").innerHTML=svg+leg;
+})();
+
+// ---- Filters + course cards ----
+let curCat="すべて";
+const filtersEl=document.getElementById("filters");
+const chips=["すべて",...present];
+filtersEl.innerHTML=chips.map(c=>{
+  const dot=c==="すべて"?"":`<span class="dot" style="background:${CAT_COLOR[c]}"></span>`;
+  return `<div class="chip${c==="すべて"?" active":""}" data-c="${c}">${dot}${c}</div>`;}).join("");
+filtersEl.querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>{
+  curCat=ch.dataset.c;filtersEl.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  ch.classList.add("active");render();});
+
+function render(){
+  const list=courses.filter(c=>curCat==="すべて"||c.category===curCat);
+  document.getElementById("courses").innerHTML=list.map(c=>{
+    const col=c.status==="done"?"#34a853":c.status==="prog"?"#f4b400":"#cfcabf";
+    const stTxt=c.status==="done"?"完了":c.status==="prog"?"進行中":"未開始";
+    const stCls=c.status==="done"?"s-done":c.status==="prog"?"s-prog":"s-none";
+    const dur=c.durationMin?` ・ ${hm(c.durationMin)}`:"";
+    return `<div class="course"><div class="top"><div class="ttl">${c.title.replace(/ ~ Claude~$/,"")}</div>
+      <span class="badge b-${c.level}">${c.level}</span></div>
+      <div class="meta"><span class="cdot" style="background:${CAT_COLOR[c.category]}"></span>${c.category} ・ ${c.lessons}レッスン${dur} ・ <span class="status ${stCls}">${stTxt}</span></div>
+      <div class="pwrap"><div class="bar"><i style="width:${c.progress}%;background:${col}"></i></div><div class="pct" style="color:${col==='#cfcabf'?'#9ca3af':col}">${c.progress}%</div></div>
+    </div>`;}).join("");
+}
+render();
+</script>
+</body>
+</html>
