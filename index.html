@@ -31,7 +31,10 @@
   .chip .dot{width:9px;height:9px;border-radius:50%}
   .chip.active{background:#1f2937;color:#fff;border-color:#1f2937}
   .courses{grid-template-columns:repeat(3,1fr)}
-  .course{background:var(--card);border-radius:16px;padding:20px 22px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .course{display:block;text-decoration:none;color:inherit;background:var(--card);border-radius:16px;padding:20px 22px;box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid transparent;transition:transform .15s,box-shadow .15s,border-color .15s;position:relative}
+  .course:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.10);border-color:#e8853f}
+  .course .go{display:inline-block;margin-top:14px;font-size:13px;font-weight:700;color:#e8853f;opacity:0;transition:opacity .15s}
+  .course:hover .go{opacity:1}
   .course .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .course .ttl{font-size:16px;font-weight:700;line-height:1.45}
   .badge{font-size:12px;padding:3px 11px;border-radius:20px;white-space:nowrap}
@@ -141,6 +144,9 @@ const RAW = {
  ]
 };
 
+const BASE = "https://digirise.school/member/courses/";
+const IDS = ["ce514a7a-02c8-41c6-b191-bee5c5367331","20bf56fa-fe03-4a4f-ab92-412c3a6f3cac","3cc6b746-92b1-424e-a190-b5ae09593359","e63adaca-1ec7-491e-99de-7d50f3aa3a8d","7be0ce96-762c-46c8-8b85-70db779d3901","56aae489-12a2-4bba-9118-ef47a4d764f6","fdcb72f6-2473-4f77-bc96-c69e091b8a03","624b3b61-460d-4e77-a296-461087b4a9c0","fdb12c1a-f789-4969-834b-44ec67e984c3","a8742df6-eca9-4bc6-a803-daf8a447c2d9","fd168983-1863-4cf0-9bd2-ef93af7a0599","442de4dd-4305-4f3f-a879-74b6ca9a0cc3","b22d367b-3401-47e9-8200-2bc2fa9ed40c","2a944f30-9627-4ab7-b33d-3270c59db882","a6d86fa6-6a36-4940-9fb7-82f646d066a4","356c0bce-4f89-4321-ab2c-59234f7fbfc4","b4f0b1ed-6222-400c-9f35-26409d78d1ea","117bb4ce-3c55-4d32-ac42-985f546783cf","b04a8ccf-2b28-4e2f-b9f3-1a589dd6a9b8","9b83e1b7-0977-421f-becf-b2bfd639ea43","51d2dada-26c5-435d-aed1-2623a228d22c","4b94a7f5-59bd-4048-a22a-2f13d7d9875b","9d370f79-277b-459b-8665-9f843cd6ae8b","6678989d-94fa-49ae-a9c3-c89dc04fc309","8b8ab264-f030-458e-8b21-2c7922b79971","dced3576-e60e-47a2-b744-88124f3d6b4e","9cbfd952-ff02-4f0d-b90a-4ccf4a18d5d0","0fe0556e-e7dd-485a-a650-8d1b0da6b084","3b16e146-a773-4a8c-8a67-13545aec6db0","9e84fb84-2807-46f2-bfb4-e76f2e9429a7","7c1434bf-2d49-4fd4-88b2-7d4a4539467c","f0efff42-ed67-49dc-8e94-e05865112c27","0dd6ffde-bf7a-42da-9e8a-6e45da42d508","b97b6609-3c30-455d-80c9-d52c57cc110e","61ea7192-5d40-40ac-bf36-030e5d78ee0d","c85e542c-0c3d-484e-83a3-2ed3cf68467c","02be7642-7162-4ca4-8c18-0064dc29aef5","5c01465a-003d-45c1-98d3-4bb2b74c86b4","97a4b723-d3fd-499c-82ec-be02c3c3339c","3af5d1f9-c465-4944-b998-3b1744c8afef","f5f1d3b8-0f95-4640-80be-363831280212","f6520f70-63f1-4381-9832-edc6486b9b19","690e4e71-021f-4403-a0a0-f714cada2bff","f3c9a073-d661-4d9c-855a-387a22415ce0","05781e1f-e30b-4362-82e2-1c925e6d340f","68cfaf2e-dc9b-433b-b50f-74ff054e656d","25d1fd8c-8390-41c9-a44c-8e69f49e8bd2","0184737e-e835-4fdb-9a6a-76fecd84607b","7748cb76-4e65-4fb5-b76a-08cff7d7847e","ecf7bbc0-2be8-4aec-904b-9d5271c6c5fc","13f4af63-fa76-4033-a8ef-a0894e1f253c","d5ff284c-31a8-4f4b-8a5c-0539bc9a5e16","159f5051-4ad2-4ae6-907d-e5af7847ae69","a8897b79-3ae5-4daf-b2f7-842ef5209f61","5025bf2a-8f3f-4d85-86a1-cdade477aa95","66d3c523-c575-4dd4-9dfc-4f9195f58563","193f780c-a205-47c3-866b-3e053cba99a0","1675dcd1-c590-4507-a86d-763bcc7e2152","6da09968-28c7-4717-adad-3b51834b9066","b49fbbff-89c3-485b-9d9c-ce506f763c09","2153878b-ddf4-4b48-a9d4-2a9508b26b7d"];
+
 const CAT_ORDER = ["デジライズAIスクールの使い方","生成AI総合","ChatGPT","Gemini","Copilot","Claude","Claude Code","Codex","その他"];
 const CAT_COLOR = {
   "デジライズAIスクールの使い方":"#8a7f6f","生成AI総合":"#5bb98c","ChatGPT":"#2e9e7e","Gemini":"#4285f4",
@@ -148,13 +154,13 @@ const CAT_COLOR = {
 };
 const OTHER = new Set(["イベントアーカイブ","Weekly AI勉強会","限定ウェビナー","AI時代を生き抜くキャリアップ術"]);
 
-const courses = RAW.courses.map(r=>{
+const courses = RAW.courses.map((r,i)=>{
   const [category,title,lessons,progress,durationMin]=r;
   const cat = OTHER.has(category)?"その他":category;
   let level="その他";
   if(/初級/.test(title))level="初級"; else if(/中級/.test(title))level="中級"; else if(/上級/.test(title))level="上級";
   const status = progress>=100?"done":progress>0?"prog":"none";
-  return {category:cat, raw:category, title, lessons, progress, durationMin, level, status};
+  return {category:cat, raw:category, title, lessons, progress, durationMin, level, status, url:BASE+IDS[i]};
 });
 
 // ---- KPIs ----
@@ -246,11 +252,12 @@ function render(){
     const stTxt=c.status==="done"?"完了":c.status==="prog"?"進行中":"未開始";
     const stCls=c.status==="done"?"s-done":c.status==="prog"?"s-prog":"s-none";
     const dur=c.durationMin?` ・ ${hm(c.durationMin)}`:"";
-    return `<div class="course"><div class="top"><div class="ttl">${c.title.replace(/ ~ Claude~$/,"")}</div>
+    return `<a class="course" href="${c.url}" target="_blank" rel="noopener"><div class="top"><div class="ttl">${c.title.replace(/ ~ Claude~$/,"")}</div>
       <span class="badge b-${c.level}">${c.level}</span></div>
       <div class="meta"><span class="cdot" style="background:${CAT_COLOR[c.category]}"></span>${c.category} ・ ${c.lessons}レッスン${dur} ・ <span class="status ${stCls}">${stTxt}</span></div>
       <div class="pwrap"><div class="bar"><i style="width:${c.progress}%;background:${col}"></i></div><div class="pct" style="color:${col==='#cfcabf'?'#9ca3af':col}">${c.progress}%</div></div>
-    </div>`;}).join("");
+      <span class="go">コースを開く →</span>
+    </a>`;}).join("");
 }
 render();
 </script>
